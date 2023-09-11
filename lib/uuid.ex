@@ -4,7 +4,7 @@ defmodule Uniq.UUID do
 
   See the [README](README.md) for general usage information.
   """
-  import Bitwise, except: ["~~~": 1, &&&: 2, |||: 2, "^^^": 2, <<<: 2, >>>: 2]
+  import Bitwise, except: [~~~: 1, &&&: 2, |||: 2, ^^^: 2, <<<: 2, >>>: 2]
   import Kernel, except: [to_string: 1]
 
   defstruct [:format, :version, :variant, :time, :seq, :node, :bytes]
@@ -307,6 +307,16 @@ defmodule Uniq.UUID do
   @spec uuid7(format) :: t
   def uuid7(format \\ :default) when format in @formats do
     time = System.system_time(:millisecond)
+    <<rand_a::12, _::6, rand_b::62>> = :crypto.strong_rand_bytes(10)
+
+    raw = <<time::biguint(48), 7::4, rand_a::12, @rfc_variant, rand_b::62>>
+
+    format(raw, format)
+  end
+
+  @spec uuid7(format, DateTime.t()) :: t
+  def uuid7(format, %DateTime{} = datetime) when format in @formats do
+    time = datetime |> DateTime.to_unix(:millisecond)
     <<rand_a::12, _::6, rand_b::62>> = :crypto.strong_rand_bytes(10)
 
     raw = <<time::biguint(48), 7::4, rand_a::12, @rfc_variant, rand_b::62>>
